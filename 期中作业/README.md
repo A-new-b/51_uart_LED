@@ -11,12 +11,12 @@
 
    电路部分的设计并未有变化，即还是使用原先的8052.dsn。
 
-   <img src="8052.png">
+   <img src="./8052.png">
 2. C语言代码部分
    
    代码部分分为主要分为两个部分，负责主体逻辑的test.c文件(包含main函数)和负责配置串口，发送数据的UART.c 和UART.h文件。
 
-   <img src="代码部分.png">
+   <img src="./代码部分.png">
 
    在UART.h 中，定义了uart_init,uart_sendByte,UART_Routine这几个函数，uart_init函数负责在最开始时配置串口相关的寄存器参数，uart_sendByte函数负责通过发送单个字符至终端，UART_Routine为中断函数，负责接受终端输入并控制LED的亮灭，而这几个函数的具体实现则在UART.c中。
 
