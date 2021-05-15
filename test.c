@@ -1,0 +1,23 @@
+#include <reg52.h>
+#include "UART.h"
+
+
+// unsigned char Sec=0x0;
+// unsigned char code t_display[]={0x3F, 0x06, 0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71};
+int main()
+{
+	uart_init();
+	uart_sendByte(0x4F);
+	uart_sendByte(0x4B);
+	uart_sendByte(0x0D);
+    while (1)
+    {
+        // // uart_sendByte(0x1);
+		// uart_sendByte(Sec);
+		// Sec++;
+		// Delay(1000);
+
+    }
+    
+}
+

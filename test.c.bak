@@ -1,0 +1,147 @@
+/**
+ * @description:    程序实现51单片机串口接收字符串，结束符为回车符，最大接收长度为64Byte，
+ *                     接收完成后返回接收结果，并清空接收缓冲区。
+ *                    注意：程序只适用于11.0592MHz晶振, 12T的51单片机，暂未做兼容设计。
+ * @author:         veis
+ * @date:           2020-03-04
+ * @version:        v1.0
+ */
+
+#include <reg52.h>
+
+// 类型重定义，便于移植
+typedef unsigned char uint8_t;
+typedef unsigned int uint16_t;
+
+// 定义串口接收标志枚举类型
+enum
+{
+    isempty = 0, // 接收缓冲区为空
+    isoverflow,    // 接收缓冲区溢出
+    isend    // 成功接收到结束标志符
+} buf_flag;
+
+// 定义接收缓冲区大小
+#define BUFFER_SIZE    64
+// 定义结束符为回车符 "\r\n"
+#define END_SYMBOL0 '\r'
+#define END_SYMBOL1    '\n'
+
+// 外部可见函数声明
+void uart_config(void);
+void send_char(uint8_t ch);
+void send_string(uint8_t *str);
+
+// 定义串口接收缓冲区
+uint8_t recv_buf[BUFFER_SIZE] = {0};
+
+void main()
+{
+    int k = 0;
+    int i = 0;
+    buf_flag = isempty;
+    uart_config();    // 初始化串口
+    send_string("I am serial port 3!\r\n");
+    P0 = ~(1<<k);//test
+    k++;
+    while (1)
+    {
+        // send_string("1\r\n");
+        if (buf_flag == isend)
+        {
+            // P0 = ~(1<<k);//test
+            // k++;
+            send_string(recv_buf); // 把接收到的字符串发送回去
+            P0 = ~(1<<k);//test
+            k++;
+            // send_string("1\r\n");
+            // P0 = ~(1<<k);//test
+            // k++;
+            i = 0;
+            while (i < BUFFER_SIZE)
+            {
+                recv_buf[i++] = 0;
+            }
+            buf_flag = isempty;
+        }
+        else if (buf_flag == isoverflow)
+        {
+            send_string("ERROR:receive buffer is overflow!\r\n"); // 提示缓冲区溢出
+            i = 0;
+            while (i < BUFFER_SIZE)
+            {
+                recv_buf[i++] = 0;
+            }
+            buf_flag = isempty;
+        }
+    }
+}
+
+/**
+ * 串口参数配置函数，这里配置为9600波特率，1位停止位，8位数据位，无校验
+ */
+void uart_config(void)
+{
+    TMOD = 0x20;
+    SCON = 0x50;
+    TH1 = 0xfd;
+    TL1 = TH1;
+    PCON = 0x00;
+    EA = 1;
+    ES = 1;
+    TR1 = 1;
+}
+
+/**
+ * [send_char]
+ * @param ch [待发送的字符]
+ */
+void send_char(uint8_t ch)
+{
+    SBUF = ch;
+    while (!TI);
+    TI = 0;
+}
+
+/**
+ * [send_string]
+ * @param str [待发送的字符串首元素地址]
+ */
+void send_string(uint8_t *str)
+{
+    while (*str != '\0')
+    {
+        SBUF = *str++;
+        while (!TI);
+        TI = 0;
+    }
+}
+
+/**
+ * [uart_interrupt]
+ */
+void uart_interrupt(void) interrupt 4
+{
+    static uint8_t n = 0;
+    if (RI)
+    {
+        RI = 0;
+        if (n < BUFFER_SIZE - 1)
+        {
+            recv_buf[n++] = SBUF;
+            // 判断是否接收到结束符（回车 "\r\n"）
+            if ((recv_buf[n - 2] == END_SYMBOL0) && (recv_buf[n - 1] == END_SYMBOL1))
+            {
+                buf_flag = isend;
+                recv_buf[n] = '\0';
+                n = 0;
+            }
+        }
+        else
+        {
+            n = 0;
+            buf_flag = isoverflow;
+        }
+    }
+
+}
