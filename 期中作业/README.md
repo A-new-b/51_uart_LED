@@ -11,12 +11,12 @@
 
    电路部分的设计并未有变化，即还是使用原先的8052.dsn。
 
-   <img src="./8052.png">
+   <img src="./8052.PNG">
 2. C语言代码部分
    
    代码部分分为主要分为两个部分，负责主体逻辑的test.c文件(包含main函数)和负责配置串口，发送数据的UART.c 和UART.h文件。
 
-   <img src="./代码部分.png">
+   <img src="./代码部分.PNG">
 
    在UART.h 中，定义了uart_init,uart_sendByte,UART_Routine这几个函数，uart_init函数负责在最开始时配置串口相关的寄存器参数，uart_sendByte函数负责通过发送单个字符至终端，UART_Routine为中断函数，负责接受终端输入并控制LED的亮灭，而这几个函数的具体实现则在UART.c中。
 
@@ -25,7 +25,7 @@
 ### 串口
 UART（Universal Asynchronous Receiver/Transmitter，即通用异步收发器）串行通信是单片机最常用的一种通信技术，通常用于单片机和其他设备之间进行通信。其相关寄存器如图所示：
 
-<img src="寄存器.png">
+<img src="寄存器.PNG">
 
 即我们在使用串口进行通讯之前，首先要配置相关的寄存器，本程序的配置在uart_init函数中实现
 ```c
@@ -44,16 +44,16 @@ UART（Universal Asynchronous Receiver/Transmitter，即通用异步收发器）
 
 这里可以简单讲一下赋值的依据，首先可以看见我们将SCON寄存器赋为0x50，即(01010000)，依据如下：
 
-<img src="SCON.png">
+<img src="SCON.PNG">
 
 图中可以看见SM0、SM1的值对应四种工作方式，我们选择的工作方式是方式1，故SM0=0，SM1=1。即最开头的01，之后可以看见我们又将REN的值也调为1，其作用如下图所示：
 
-<img src="REN.png">
+<img src="REN.PNG">
 
 在SCON其余的值对本程序不影响，故设置为0。
 PCON寄存器主要负责电源控制，作用如图：
 
-<img src="PCON.png">
+<img src="PCON.PNG">
 
 图中有点错误在于SMOD=0是各工作方式波特率正常，故赋位0，其余各位也暂无影响，故也赋值为0，即PCON=0x00。
 
@@ -62,15 +62,15 @@ PCON寄存器主要负责电源控制，作用如图：
 
 在串口通讯的过程中，定时器被用作通信的时钟源。因为在全双工的uart串口通讯过程中必定存在与外界设备沟通的时序问题，所以也应当会存在一个时钟源(个人猜测)。相关寄存器如图所示：
 
-<img src="定时器.png">
+<img src="定时器.PNG">
 
 其中，TMOD寄存器的作用如下图所示，
 
-<img src="TMOD.png">
+<img src="TMOD.PNG">
 
 我们需要修改的部分只有定时器1的控制模式
 
-<img src="TMOD45.png">
+<img src="TMOD45.PNG">
 
 选择8位自动重装定时器模式，则TMOD=0x20(00100000)。
 
@@ -78,23 +78,23 @@ PCON寄存器主要负责电源控制，作用如图：
 
 波特率的计算公式如图：
 
-<img src="波特率.png">
-<img src="溢出速率.png">
+<img src="波特率.PNG">
+<img src="溢出速率.PNG">
 
 而T1即定时器1在模式2下的溢出率由TL1值决定，TH1与TL1相同，负责设定定时器1的重装值。这里我们采用的参数是较为经典的9600波特率，晶振11.0592M。整体的计算过程较为复杂，有个偷懒的办法，交给软件去算，以下截图为stc-isp软件自动生成的结果。
 
-<img src="stc.png">
+<img src="stc.PNG">
 
 多了一些其他参数，但无伤大雅(*^_^*)。
 
 ### 中断
 在前面提到过配置部分除了定时器的配置外，还配置了相关的中断设置，那么中断的具体定义如图：
 
-<img src="中断.png">
+<img src="中断.PNG">
 
 那么本次使用的中断请求为串口(uart)中断，可以理解为当串口收到数据时，cpu会暂停当前的工作(main函数)，进而去处理中断函数所规定的内容。(虽然个人有点不太明白为什么不能写成在main函数中轮询SBUF寄存器，可能是模块化？)，那么首先应当允许使用该中断，即：
 
-<img src="EA.png">
+<img src="EA.PNG">
 
 ```c
 EA = 1;
@@ -102,7 +102,7 @@ ES = 1;
 ```
 接下来需要编写对应的中断函数，因为中断函数不在main函数中调用，所以需要知道其中断号以标识其为中断函数。而串口中断号在下图中显示
 
-<img src ="中断号.png">
+<img src ="中断号.PNG">
 
 那么以此编写中断函数代码
 
@@ -139,19 +139,19 @@ void uart_sendByte(unsigned char byte)
 
 依据如图：
 
-<img src="TI.png">
+<img src="TI.PNG">
 
 
 ## 运行结果
 
 按下运行键后可得如图所示，首先先向终端发送“OK”字符。
 
-<img src="运行结果1.png">
+<img src="运行结果1.PNG">
 
 接着向终端输入1，可以看见第二个LED亮起
 
-<img src="输入1.png">
+<img src="输入1.PNG">
 
 再输入6，可以看见第七个LED亮起
 
-<img src="输入6.png">
+<img src="输入6.PNG">
